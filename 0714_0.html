@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>掃描醫囑號</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #dde9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    .app-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    #reader {
+      width: 100%;
+      height: 420px;
+      margin: 0 auto 1rem;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    #result {
+      font-size: 1.1rem;
+      color: #444;
+      background-color: #e8f0fe;
+      padding: 0.75rem;
+      border-radius: 10px;
+      min-height: 2rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      background-color: #5b9bd5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <h2>📷 掃描醫囑號</h2>
+    <div id="reader"></div>
+    <div id="result">尚未掃描</div>
+    <button onclick="stopScan()">停止掃描</button>
+  </div>
+
+  <script>
+    const html5QrCode = new Html5Qrcode("reader");
+
+    function startScan() {
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 200, height: 400 }
+        },
+        (decodedText) => {
+          document.getElementById("result").innerText = "✅ 醫囑號：" + decodedText;
+          html5QrCode.stop();
+          // 掃描成功後跳轉到簽收頁，並帶醫囑號參數
+          window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(decodedText)}`;
+        },
+        (errorMessage) => {
+          // 可以忽略掃描錯誤
+        }
+      ).catch(err => {
+        document.getElementById("result").innerText = "⚠️ 相機啟動失敗：" + err;
+      });
+    }
+
+    function stopScan() {
+      html5QrCode.stop().then(() => {
+        document.getElementById("result").innerText = "已停止掃描";
+      });
+    }
+
+    // 自動啟動掃描（使用者點進頁面要點一下允許才會動）
+    window.addEventListener("load", () => {
+      setTimeout(() => startScan(), 200); // 微 delay 保證載入後啟動
+    });
+  </script>
+</body>
+</html>
