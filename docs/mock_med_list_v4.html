@@ -77,7 +77,7 @@
 <body>
   <div id="header">
     <h2>💊 藥品簽收列表</h2>
-    <div>🆔 醫囑號：<strong id="rxId">#RX000</strong></div>
+    <div>🆔 醫囑號：<strong id="rxId">（載入中...）</strong></div>
     <div id="summary">✅ 已勾選藥品數量：<span id="totalCount">0</span></div>
   </div>
 
@@ -92,27 +92,7 @@
       </tr>
     </thead>
     <tbody id="medBody">
-      <tr>
-        <td><img src="https://i.imgur.com/ONXQe4U.png" class="med-image" onclick="showModal(this)" alt="普拿疼" /></td>
-        <td>普拿疼</td>
-        <td>500mg</td>
-        <td>2</td>
-        <td><input type="checkbox" class="med-check" checked /></td>
-      </tr>
-      <tr>
-        <td><img src="https://i.imgur.com/kHtK6gG.png" class="med-image" onclick="showModal(this)" alt="胃乳" /></td>
-        <td>胃乳</td>
-        <td>10ml</td>
-        <td>1</td>
-        <td><input type="checkbox" class="med-check" checked /></td>
-      </tr>
-      <tr>
-        <td><img src="https://i.imgur.com/dK1k9pJ.png" class="med-image" onclick="showModal(this)" alt="維他命B群" /></td>
-        <td>維他命B群</td>
-        <td>100mg</td>
-        <td>3</td>
-        <td><input type="checkbox" class="med-check" checked /></td>
-      </tr>
+      <tr><td colspan="5">🔄 正在載入藥品資料...</td></tr>
     </tbody>
   </table>
 
@@ -121,38 +101,80 @@
   </div>
 
   <script>
+    const API_URL = "https://mdews.csh.org.tw/WebAPI/MedicationConfirm/v1/Medication/DrugList";
+    const ACCESS_TOKEN = "Q29ubmVjdERCIExvY2FsSG9zdA"; // TODO: 請替換為實際 Token
+    const WARD_NAME = "Ｎ13";              // TODO: 若需動態設定可改為由使用者輸入
+
+    async function fetchDrugList() {
+      const barCode = getQueryParam("rx");
+      document.getElementById("rxId").textContent = barCode || "未提供";
+      if (!barCode) return;
+
+      try {
+        const response = await fetch(`${API_URL}?ward=${encodeURIComponent(WARD_NAME)}&barCode=${encodeURIComponent(barCode)}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${ACCESS_TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) throw new Error("API 錯誤：" + response.status);
+        const data = await response.json();
+        const drugList = data.content?.drugList || [];
+
+        const tbody = document.getElementById("medBody");
+        tbody.innerHTML = "";
+
+        if (drugList.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5">❗ 查無藥品資料</td></tr>`;
+          return;
+        }
+
+        drugList.forEach(item => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><img src="${item.imageUrl || '#'}" class="med-image" onclick="showModal(this)" alt="${item.itemName}" /></td>
+            <td>${item.itemName}</td>
+            <td>${item.doseUnit}</td>
+            <td>${item.totQty}</td>
+            <td><input type="checkbox" class="med-check" checked /></td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        document.querySelectorAll('.med-check').forEach(cb => {
+          cb.addEventListener('change', updateTotalCount);
+        });
+
+        updateTotalCount();
+
+      } catch (err) {
+        console.error("載入失敗", err);
+        document.getElementById("medBody").innerHTML = `<tr><td colspan="5">❌ 載入失敗：${err.message}</td></tr>`;
+      }
+    }
+
     function getQueryParam(name) {
       const url = new URL(window.location.href);
       return url.searchParams.get(name);
     }
-    const rx = getQueryParam('rx');
-    if (rx) {
-      document.getElementById('rxId').textContent = rx;
+
+    function updateTotalCount() {
+      const checks = document.querySelectorAll(".med-check");
+      let count = 0;
+      checks.forEach(cb => { if (cb.checked) count++; });
+      document.getElementById("totalCount").textContent = count;
     }
 
     function showModal(img) {
-      const modal = document.getElementById('imgModal');
-      const modalImg = document.getElementById('modalImage');
+      const modal = document.getElementById("imgModal");
+      const modalImg = document.getElementById("modalImage");
       modalImg.src = img.src;
-      modal.style.display = 'flex';
+      modal.style.display = "flex";
     }
 
-    function updateTotalCount() {
-      const checks = document.querySelectorAll('.med-check');
-      let count = 0;
-      checks.forEach(cb => {
-        if (cb.checked) {
-          count++;
-        }
-      });
-      document.getElementById('totalCount').textContent = count;
-    }
-
-    document.querySelectorAll('.med-check').forEach(cb => {
-      cb.addEventListener('change', updateTotalCount);
-    });
-
-    updateTotalCount();
+    window.addEventListener("load", fetchDrugList);
   </script>
 </body>
 </html>
