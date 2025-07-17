@@ -1,224 +1,84 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>醫護掃描系統</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(135deg, #fff6e3 0%, #ffd6b3 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
-
-        .container {
-            background: #fff8f0;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 80px 40px;
-            max-width: 100%;
-            width: 100%;
-            min-height: 90vh;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* 調整為置中顯示 */
-        }
-
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #ffb347, #ff7c7c, #ffb347);
-        }
-
-        .header-info {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #ecf0f1;
-        }
-
-        .header-info h2 {
-            color: #2c3e50;
-            font-size: 1.5em;
-            font-weight: 600;
-            margin: 0 0 5px 0;
-        }
-
-        .staff-details {
-            color: #7f8c8d;
-            font-size: 1em;
-            margin: 0;
-            font-weight: 400;
-        }
-
-        .scan-button {
-            background: linear-gradient(135deg, #ff7c7c, #ffb347);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            padding: 40px 60px;
-            font-size: 1.8em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 16px rgba(255, 183, 77, 0.3);
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            max-width: 300px;
-            margin: 0 auto;
-        }
-
-        .scan-button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transition: all 0.3s ease;
-            transform: translate(-50%, -50%);
-        }
-
-        .scan-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(255, 183, 77, 0.4);
-        }
-
-        .scan-button:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .scan-button:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 8px rgba(255, 183, 77, 0.3);
-        }
-
-        .scan-icon {
-            display: inline-block;
-            margin-right: 10px;
-            font-size: 1.2em;
-        }
-
-        .loading {
-            display: none;
-            margin-top: 20px;
-            color: #7f8c8d;
-        }
-
-        .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #ecf0f1;
-            border-top: 3px solid #ff7c7c;
-            border-radius: 50%;
-            display: inline-block;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 40px 20px;
-            }
-            
-            .scan-button {
-                padding: 20px 30px;
-                font-size: 1.2em;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>醫護掃描首頁</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #dde9f9;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 40px 30px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h2 {
+      color: #1a3c5e;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    #staffInfo {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, #5b9bd5, #4a90e2);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div style="width:100%;text-align:center;padding:40px 0 0 0;">
-            <h2 id="staffInfo">載入中...</h2>
-        </div>
-        <div class="header-info">
-            <!-- 移除 staffInfo 與 staffDetails，已移至最上方 -->
-        </div>
-        <button class="scan-button" onclick="goToScanPage()">
-            <span class="scan-icon">📷</span>
-            掃描
-        </button>
-    </div>
-<script>
+  <div class="container">
+    <h2>📋 醫護掃描系統</h2>
+    <div id="staffInfo">載入中...</div>
+    <button onclick="goToScanPage()">📷 開始掃描</button>
+  </div>
+
+  <script>
     function goToScanPage() {
-        window.location.href = "0714_0.html";
+      window.location.href = "0714_0.html";
     }
-    window.onload = function () {
-        loadStaffInfo();
-    };
-</script>
-
-    <script>
-        // 從醫院登入系統獲取人員資訊的函數
-        function loadStaffInfo() {
-            // 這裡可以連接到您的醫院登入系統API
-            // 範例：fetch('/api/staff/current') 或其他您的API端點
-            
-            // 模擬從資料庫獲取資料的過程
-            setTimeout(() => {
-                // 這裡應該是實際的API調用
-                // 範例資料結構，請依據您的實際資料庫格式調整
-                const staffData = {
-                    employeeId: "H001234"
-                };
-                
-                // 只顯示員工編號在上方
-                document.getElementById('staffInfo').textContent = `員工編號: ${staffData.employeeId}`;
-            }, 1000);
-        }
-
-        // 實際的API連接函數 (請根據您的系統調整)
-        async function fetchStaffData() {
-            try {
-                // 替換為您的實際API端點
-                // const response = await fetch('/api/staff/current');
-                // const data = await response.json();
-                // return data;
-                
-                // 目前顯示載入狀態
-                document.getElementById('staffInfo').textContent = "請登入系統";
-                document.getElementById('staffDetails').textContent = "";
-                
-            } catch (error) {
-                console.error('獲取人員資料失敗:', error);
-                document.getElementById('staffInfo').textContent = "載入失敗";
-                document.getElementById('staffDetails').textContent = "請重新整理頁面";
-            }
-        }
-
-        // 頁面載入時執行
-        window.onload = function() {
-            // 使用模擬資料，請替換為實際的API調用
-            loadStaffInfo();
-            // fetchStaffData(); // 實際使用時請啟用這個函數
+    function loadStaffInfo() {
+      // 模擬從後端取得員工資料
+      setTimeout(() => {
+        const staffData = {
+          employeeId: "H001234"
         };
-    </script>
+        document.getElementById('staffInfo').textContent = `員工編號：${staffData.employeeId}`;
+      }, 800);
+    }
+    window.onload = loadStaffInfo;
+  </script>
 </body>
 </html>
