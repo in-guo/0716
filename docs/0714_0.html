@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>全螢幕掃描醫囑條碼</title>
+  <title>掃描醫囑號</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,6 +20,21 @@
       z-index: 999;
       background: black;
     }
+    #scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 100%;
+      background: red;
+      animation: scanMove 2s linear infinite;
+      z-index: 1000;
+    }
+    @keyframes scanMove {
+      0% { top: 0%; }
+      50% { top: 50%; }
+      100% { top: 100%; }
+    }
     #overlay-text {
       position: absolute;
       bottom: 20px;
@@ -31,11 +46,14 @@
       font-family: sans-serif;
       background: rgba(0, 0, 0, 0.5);
       padding: 10px 0;
+      z-index: 1001;
     }
   </style>
 </head>
 <body>
-  <div id="reader"></div>
+  <div id="reader">
+    <div id="scan-line"></div>
+  </div>
   <div id="overlay-text">📷 請對準條碼，自動掃描中...</div>
 
   <script>
@@ -69,21 +87,33 @@
 
       Quagga.onDetected(function(data) {
         const code = data?.codeResult?.code || "";
-        console.log("✅ 掃描成功：", code);
+        const confidence = data?.codeResult?.confidence || 0;
 
-        if (!/^\d{8,10}$/.test(code)) {
-          document.getElementById("overlay-text").innerText = "⚠️ 非醫囑號：" + code;
+        console.log("📦 偵測結果：", code, "信心度：", confidence);
+
+        if (confidence < 30) {
+          document.getElementById("overlay-text").innerText = `⚠️ 掃描不穩（信心度 ${Math.round(confidence)}%）`;
           return;
         }
 
+        if (!/^\d{8,10}$/.test(code)) {
+          document.getElementById("overlay-text").innerText = "⚠️ 非醫囑號格式：" + code;
+          return;
+        }
+
+        document.getElementById("overlay-text").innerText = `✅ 掃描成功：${code}`;
         Quagga.stop();
         scanning = false;
-        window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(code)}`;
+
+        // 避免使用者手抖多次觸發
+        setTimeout(() => {
+          window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(code)}`;
+        }, 800);
       });
     }
 
     window.addEventListener("load", () => {
-      setTimeout(() => startScan(), 200);
+      setTimeout(() => startScan(), 300);
     });
   </script>
 </body>
