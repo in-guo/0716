@@ -97,15 +97,23 @@
         Quagga.start();
       });
       Quagga.onDetected(function(data) {
-        if (data && data.codeResult && data.codeResult.code) {
-          document.getElementById("result").innerText = "✅ 醫囑號：" + data.codeResult.code;
-          Quagga.stop();
-          scanning = false;
-          // 跳轉
-          window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(data.codeResult.code)}`;
-        }
-      });
-    }
+  const code = data?.codeResult?.code;
+
+  // ✅ 醫囑號格式：僅允許 8 碼數字
+  if (!/^\d{8}$/.test(code)) {
+    document.getElementById("result").innerText = "⚠️ 條碼格式錯誤：" + code;
+    return;
+  }
+
+  document.getElementById("result").innerText = "✅ 醫囑號：" + code;
+  Quagga.stop();
+  scanning = false;
+
+  window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(code)}`;
+});
+
+      };
+    
     function stopScan() {
       Quagga.stop();
       scanning = false;
