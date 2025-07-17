@@ -17,7 +17,7 @@
       top: 0; left: 0;
       width: 100vw;
       height: 100vh;
-      z-index: 999;
+      z-index: 1;
       background: black;
     }
     #scan-line {
@@ -28,7 +28,7 @@
       width: 100%;
       background: red;
       animation: scanMove 2s linear infinite;
-      z-index: 1000;
+      z-index: 2;
     }
     @keyframes scanMove {
       0% { top: 0%; }
@@ -46,7 +46,7 @@
       font-family: sans-serif;
       background: rgba(0, 0, 0, 0.5);
       padding: 10px 0;
-      z-index: 1001;
+      z-index: 3;
     }
   </style>
 </head>
@@ -69,13 +69,21 @@
           type: "LiveStream",
           target: document.querySelector('#reader'),
           constraints: {
-            facingMode: "environment"
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
           }
         },
         decoder: {
           readers: ["code_128_reader"]
         },
-        locate: true
+        locate: true,
+        locator: {
+          patchSize: "medium", // 提高精度："x-small", "small", "medium", "large"
+          halfSample: true
+        },
+        numOfWorkers: 2,
+        frequency: 10
       }, function(err) {
         if (err) {
           document.getElementById("overlay-text").innerText = "⚠️ 相機啟動失敗：" + err;
@@ -105,7 +113,7 @@
         Quagga.stop();
         scanning = false;
 
-        // 避免使用者手抖多次觸發
+        // 防止重複觸發
         setTimeout(() => {
           window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(code)}`;
         }, 800);
