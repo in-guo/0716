@@ -3,92 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>掃描醫囑號</title>
+  <title>全螢幕掃描醫囑條碼</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
   <style>
-    body {
-      margin: 0;
-      font-family: 'Noto Sans TC', sans-serif;
-      background-color: #dde9f9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      min-height: 100vh;
-    }
-    .app-container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 420px;
-      text-align: center;
-    }
-    h2 {
-      color: #1a3c5e;
-      font-weight: 700;
-      margin-bottom: 1rem;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      background: black;
+      overflow: hidden;
     }
     #reader {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 999;
+      background: black;
+    }
+    #overlay-text {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
       width: 100%;
-      height: 360px;
-      margin-bottom: 1rem;
-      background: #eee;
-      border-radius: 12px;
-      border: 2px solid #ccc;
-    }
-    #result {
-      font-size: 1rem;
-      color: #333;
-      background-color: #e8f0fe;
-      padding: 0.8rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-    }
-    input[type="text"] {
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #aaa;
-      width: 80%;
-      margin-bottom: 0.5rem;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      background: linear-gradient(135deg, #5b9bd5, #4a90e2);
       color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-top: 0.5rem;
-    }
-    button:hover {
-      transform: translateY(-1px);
+      text-align: center;
+      font-size: 1.2rem;
+      font-family: sans-serif;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 0;
     }
   </style>
 </head>
 <body>
-
-  <div class="app-container">
-    <h2>📷 掃描醫囑條碼</h2>
-    <div id="reader"></div>
-    <div id="result">尚未掃描</div>
-    <button onclick="stopScan()">🛑 停止掃描</button>
-    <hr style="margin: 20px 0;">
-    <div>
-      <input type="text" id="manualRx" placeholder="手動輸入醫囑號" />
-      <button onclick="goManual()">送出</button>
-    </div>
-  </div>
+  <div id="reader"></div>
+  <div id="overlay-text">📷 請對準條碼，自動掃描中...</div>
 
   <script>
     let scanning = false;
+
     function startScan() {
       if (scanning) return;
       scanning = true;
+
       Quagga.init({
         inputStream: {
           name: "Live",
@@ -99,11 +55,12 @@
           }
         },
         decoder: {
-          readers: ["code_128_reader"] // ✅ 限定 Code128 條碼
-        }
+          readers: ["code_128_reader"]
+        },
+        locate: true
       }, function(err) {
         if (err) {
-          document.getElementById("result").innerText = "⚠️ 相機啟動失敗：" + err;
+          document.getElementById("overlay-text").innerText = "⚠️ 相機啟動失敗：" + err;
           scanning = false;
           return;
         }
@@ -112,40 +69,22 @@
 
       Quagga.onDetected(function(data) {
         const code = data?.codeResult?.code || "";
-        console.log("📦 偵測到條碼內容：", code, "格式：", data?.codeResult?.format);
+        console.log("✅ 掃描成功：", code);
 
-        // ✅ 限定 8~10 碼數字（醫囑號）
         if (!/^\d{8,10}$/.test(code)) {
-          document.getElementById("result").innerText = "⚠️ 無效格式：" + code;
+          document.getElementById("overlay-text").innerText = "⚠️ 非醫囑號：" + code;
           return;
         }
 
-        document.getElementById("result").innerText = "✅ 醫囑號：" + code;
         Quagga.stop();
         scanning = false;
         window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(code)}`;
       });
     }
 
-    function stopScan() {
-      Quagga.stop();
-      scanning = false;
-      document.getElementById("result").innerText = "📴 已停止掃描";
-    }
-
-    function goManual() {
-      const rx = document.getElementById("manualRx").value;
-      if (!/^\d{8,10}$/.test(rx)) {
-        alert("請輸入 8~10 位數字的醫囑號");
-        return;
-      }
-      window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(rx)}`;
-    }
-
     window.addEventListener("load", () => {
-      setTimeout(() => startScan(), 300);
+      setTimeout(() => startScan(), 200);
     });
   </script>
-
 </body>
 </html>
