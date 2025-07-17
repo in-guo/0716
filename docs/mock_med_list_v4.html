@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>簽收藥品列表</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
@@ -16,13 +16,6 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    h2 {
-      margin-bottom: 10px;
-    }
-    #summary {
-      font-size: 18px;
-      margin-top: 10px;
-    }
     table {
       border-collapse: collapse;
       width: 100%;
@@ -30,31 +23,22 @@
       margin: auto;
       background: white;
       border-radius: 12px;
-      overflow: hidden;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     th, td {
       padding: 12px;
       text-align: center;
       border-bottom: 1px solid #ccc;
-      vertical-align: middle;
     }
     th {
       background-color: #b2d7f2;
     }
-    tr:last-child td {
-      border-bottom: none;
-    }
     img.med-image {
       width: 60px;
       height: auto;
-      cursor: pointer;
       border-radius: 6px;
       border: 1px solid #ccc;
-      transition: transform 0.2s ease;
-    }
-    img.med-image:hover {
-      transform: scale(1.1);
+      cursor: pointer;
     }
     #imgModal {
       display: none;
@@ -76,9 +60,9 @@
 </head>
 <body>
   <div id="header">
-    <h2>💊 藥品簽收列表</h2>
-    <div>🆔 醫囑號：<strong id="rxId">（載入中...）</strong></div>
-    <div id="summary">✅ 已勾選藥品數量：<span id="totalCount">0</span></div>
+    <h2>💊 簽收藥品列表</h2>
+    <div>🆔 醫囑號：<strong id="rxId">讀取中...</strong></div>
+    <div>✅ 已勾選藥品數：<span id="totalCount">0</span></div>
   </div>
 
   <table>
@@ -102,63 +86,11 @@
 
   <script>
     const API_URL = "https://mdews.csh.org.tw/WebAPI/MedicationConfirm/v1/Medication/DrugList";
-    const ACCESS_TOKEN = "Q29ubmVjdERCIExvY2FsSG9zdA"; // TODO: 請替換為實際 Token
-    const WARD_NAME = "Ｎ13";              // TODO: 若需動態設定可改為由使用者輸入
+    const ACCESS_TOKEN = "Q29ubmVjdERCIExvY2FsSG9zdA"; // TODO: 請替換
+    const WARD_NAME = "N13"; // TODO: 請視情況設定
 
-    async function fetchDrugList() {
-      const barCode = getQueryParam("rx");
-      document.getElementById("rxId").textContent = barCode || "未提供";
-      if (!barCode) return;
-
-      try {
-        const response = await fetch(`${API_URL}?ward=${encodeURIComponent(WARD_NAME)}&barCode=${encodeURIComponent(barCode)}`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${ACCESS_TOKEN}`,
-            "Content-Type": "application/json"
-          }
-        });
-
-        if (!response.ok) throw new Error("API 錯誤：" + response.status);
-        const data = await response.json();
-        const drugList = data.content?.drugList || [];
-
-        const tbody = document.getElementById("medBody");
-        tbody.innerHTML = "";
-
-        if (drugList.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5">❗ 查無藥品資料</td></tr>`;
-          return;
-        }
-
-        drugList.forEach(item => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td><img src="${item.imageUrl || '#'}" class="med-image" onclick="showModal(this)" alt="${item.itemName}" /></td>
-            <td>${item.itemName}</td>
-            <td>${item.doseUnit}</td>
-            <td>${item.totQty}</td>
-            <td><input type="checkbox" class="med-check" checked /></td>
-          `;
-          tbody.appendChild(row);
-        });
-
-        document.querySelectorAll('.med-check').forEach(cb => {
-          cb.addEventListener('change', updateTotalCount);
-        });
-
-        updateTotalCount();
-
-      } catch (err) {
-        console.error("載入失敗", err);
-        document.getElementById("medBody").innerHTML = `<tr><td colspan="5">❌ 載入失敗：${err.message}</td></tr>`;
-      }
-    }
-
-    function getQueryParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name);
-    }
+    const rx = new URLSearchParams(window.location.search).get('rx');
+    document.getElementById("rxId").textContent = rx || "未提供";
 
     function updateTotalCount() {
       const checks = document.querySelectorAll(".med-check");
@@ -167,14 +99,57 @@
       document.getElementById("totalCount").textContent = count;
     }
 
+    async function fetchDrugList() {
+      if (!rx) return;
+
+      try {
+        const res = await fetch(`${API_URL}?ward=${WARD_NAME}&barCode=${rx}`, {
+          headers: {
+            "Authorization": `Bearer ${ACCESS_TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        });
+        const data = await res.json();
+        const list = data?.content?.drugList || [];
+
+        const tbody = document.getElementById("medBody");
+        tbody.innerHTML = "";
+
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="5">❗ 查無藥品</td></tr>`;
+          return;
+        }
+
+        list.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><img src="${item.imageUrl}" class="med-image" onclick="showModal(this)" /></td>
+            <td>${item.itemName}</td>
+            <td>${item.doseUnit}</td>
+            <td>${item.totQty}</td>
+            <td><input type="checkbox" class="med-check" checked /></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll(".med-check").forEach(cb => {
+          cb.addEventListener("change", updateTotalCount);
+        });
+
+        updateTotalCount();
+      } catch (e) {
+        document.getElementById("medBody").innerHTML = `<tr><td colspan="5">❌ 載入失敗</td></tr>`;
+        console.error("API 錯誤", e);
+      }
+    }
+
     function showModal(img) {
       const modal = document.getElementById("imgModal");
-      const modalImg = document.getElementById("modalImage");
-      modalImg.src = img.src;
+      document.getElementById("modalImage").src = img.src;
       modal.style.display = "flex";
     }
 
-    window.addEventListener("load", fetchDrugList);
+    window.onload = fetchDrugList;
   </script>
 </body>
 </html>

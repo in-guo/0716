@@ -2,83 +2,46 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>醫護掃描首頁</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>藥品簽收系統首頁</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
     body {
       font-family: 'Noto Sans TC', sans-serif;
-      background-color: #dde9f9;
-      height: 100vh;
+      background: #dde9f9;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-    }
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 40px 30px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
     }
     h2 {
       color: #1a3c5e;
       margin-bottom: 20px;
-      font-weight: 700;
     }
-    #staffInfo {
+    .staff-info {
       font-size: 1.1rem;
-      color: #333;
       margin-bottom: 30px;
     }
     button {
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      background: linear-gradient(135deg, #5b9bd5, #4a90e2);
-      color: white;
+      padding: 1rem 2rem;
+      font-size: 1.3rem;
       border: none;
       border-radius: 10px;
+      background: linear-gradient(135deg, #5b9bd5, #4a90e2);
+      color: white;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
-    }
-    button:active {
-      transform: translateY(0);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>📋 醫護掃描系統</h2>
-    <div id="staffInfo">載入中...</div>
-    <button onclick="goToScanPage()">📷 開始掃描</button>
-  </div>
-
-  <script>
-    function goToScanPage() {
-      window.location.href = "0714_0.html";
-    }
-    function loadStaffInfo() {
-      // 模擬從後端取得員工資料
-      setTimeout(() => {
-        const staffData = {
-          employeeId: "H001234"
-        };
-        document.getElementById('staffInfo').textContent = `員工編號：${staffData.employeeId}`;
-      }, 800);
-    }
-    window.onload = loadStaffInfo;
-  </script>
+  <h2>📋 藥品簽收系統</h2>
+  <div class="staff-info">員工編號：H001234</div>
+  <button onclick="location.href='0714_0.html'">📷 開始掃描</button>
 </body>
 </html>

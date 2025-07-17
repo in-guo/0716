@@ -2,42 +2,41 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>掃描醫囑號</title>
   <script type="module">
     import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/esm/index.min.js';
 
     const codeReader = new BrowserMultiFormatReader();
+    const video = document.getElementById('video');
     const overlayText = document.getElementById('overlay-text');
-    const videoElement = document.getElementById('video');
-
     let scanning = false;
 
     async function startScan() {
       try {
         const constraints = {
           video: {
-            facingMode: "environment" , // ✅ 強制後鏡頭
+            facingMode: "environment",
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        videoElement.srcObject = stream;
-        videoElement.setAttribute("playsinline", true);
-        videoElement.play();
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true);
+        video.play();
 
-        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+        codeReader.decodeFromVideoElement(video, (result, err) => {
           if (result && !scanning) {
             const code = result.getText();
-            console.log("掃描成功：", code);
             if (!/^\d{8,10}$/.test(code)) {
               overlayText.textContent = "⚠️ 非醫囑號格式：" + code;
               return;
             }
+
             scanning = true;
-            overlayText.textContent = `✅ 醫囑號：${code}`;
+            overlayText.textContent = "✅ 掃描成功：" + code;
             codeReader.reset();
             setTimeout(() => {
               window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(code)}`;
@@ -45,11 +44,10 @@
           }
         });
 
-        overlayText.textContent = "📷 自動使用後鏡頭掃描中...";
-
-      } catch (error) {
-        console.error("⚠️ 鏡頭啟動錯誤", error);
-        overlayText.textContent = "⚠️ 無法啟動後鏡頭：" + error.message;
+        overlayText.textContent = "📷 自動開啟後鏡頭掃描中...";
+      } catch (e) {
+        console.error("相機錯誤", e);
+        overlayText.textContent = "⚠️ 鏡頭啟動失敗：" + e.message;
       }
     }
 
@@ -65,11 +63,12 @@
       font-family: sans-serif;
     }
     #video {
-      position: fixed;
-      top: 0; left: 0;
       width: 100vw;
       height: 100vh;
       object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
       z-index: 1;
     }
     #scan-line {
@@ -101,7 +100,7 @@
   </style>
 </head>
 <body>
-  <video id="video" muted autoplay></video>
+  <video id="video" autoplay muted playsinline></video>
   <div id="scan-line"></div>
   <div id="overlay-text">🔄 載入中...</div>
 </body>
