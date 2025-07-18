@@ -1,72 +1,40 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>掃描醫囑條碼</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <title>掃描條碼</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: black;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-    }
-    #reader {
-      width: 100vw;
-      height: 100vh;
-      background: #000;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-    #overlay-text {
-      position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #fff;
-      background: rgba(0,0,0,0.5);
-      padding: 8px 18px;
-      border-radius: 8px;
-      font-size: 1.2rem;
-      z-index: 2;
-      text-align: center;
-    }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: black; }
+    #reader { width: 100%; height: 100vh; }
+    #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border: 40px solid rgba(0,0,0,0.5); box-sizing: border-box; }
   </style>
 </head>
 <body>
   <div id="reader"></div>
-  <div id="overlay-text">📷 請將條碼置於螢幕中央</div>
+  <div id="overlay"></div>
 
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
-    window.onload = function() {
-      const reader = new Html5Qrcode("reader");
-      // 全螢幕掃描設定
-      const qrConfig = { fps: 10, qrbox: window.innerWidth < 600 ? { width: window.innerWidth * 0.9, height: window.innerHeight * 0.5 } : { width: 400, height: 300 } };
-      let scanned = false;
-      reader.start(
-        { facingMode: "environment" },
-        qrConfig,
-        (decodedText) => {
-          if (!scanned) {
-            scanned = true;
-            document.getElementById("overlay-text").innerText = "✅ 掃描成功：" + decodedText;
-            setTimeout(() => {
-              window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(decodedText)}`;
-            }, 800);
-          }
-        },
-        (errorMessage) => {
-          // 可忽略錯誤
-        }
-      ).catch(err => {
-        document.getElementById("overlay-text").innerText = "⚠️ 相機啟動失敗：" + err;
+    const rxRegex = /^[0-9]{8}$/;
+    const scanner = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.3333 }; // fullscreen scan box
+
+    function onScanSuccess(decodedText) {
+      if (!rxRegex.test(decodedText)) return;
+      scanner.stop().then(() => {
+        console.log("Scanned:", decodedText);
+        window.location.href = `mock_med_list_v4.html?rx=${decodedText}`;
       });
-    };
+    }
+
+    Html5Qrcode.getCameras().then(devices => {
+      const backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+      scanner.start(backCam.id, config, onScanSuccess);
+    }).catch(err => {
+      console.error("Camera error", err);
+      alert("無法啟用相機：" + err);
+    });
   </script>
 </body>
 </html>

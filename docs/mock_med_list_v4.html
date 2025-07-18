@@ -41,9 +41,14 @@
     const ward = 'N13';
     document.getElementById('rx').textContent = rx;
 
-    const apiUrl = `http://172.16.38.56:3000/proxy/druglist?ward=${ward}&barCode=${rx}`;
+    const apiUrl = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${rx}`;
 
-    fetch(apiUrl)
+    fetch(apiUrl, {
+      headers: {
+        'Authorization': 'Bearer Q29ubmVjdERCIExvY2FsSG9zdA',
+        'Accept': 'application/json'
+      }
+    })
       .then(res => res.ok ? res.json() : Promise.reject(res))
       .then(data => {
         const meds = (data.content && data.content.drugList) || [];

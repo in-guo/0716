@@ -2,67 +2,33 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>藥品簽收系統首頁</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>簽收系統首頁</title>
   <style>
-    body {
-      font-family: 'Noto Sans TC', sans-serif;
-      background: #dde9f9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h2 {
-      color: #1a3c5e;
-      margin-bottom: 20px;
-    }
-    .staff-info {
-      font-size: 1.1rem;
-      margin-bottom: 30px;
-    }
-    button {
-      padding: 1rem 2rem;
-      font-size: 1.3rem;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #5b9bd5, #4a90e2);
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    button:hover {
-      transform: translateY(-2px);
-    }
+    body { font-family: sans-serif; text-align: center; background: #f0f8ff; padding: 3rem; }
+    .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: inline-block; width: 90%; max-width: 400px; }
+    input, button { font-size: 1.2rem; padding: 0.5rem; margin-top: 1rem; width: 100%; border-radius: 0.5rem; border: 1px solid #ccc; }
+    button { background: #007bff; color: white; cursor: pointer; border: none; }
+    button:hover { background: #0056b3; }
   </style>
 </head>
 <body>
-  <h2>📋 藥品簽收系統</h2>
-  <div class="staff-info" id="staffInfo">員工編號：載入中...</div>
-  <button onclick="location.href='0714_0.html'">📷 開始掃描</button>
+  <div class="card">
+    <h2>📋 藥品簽收系統</h2>
+    <input type="text" id="staffId" placeholder="請輸入人員編號">
+    <button onclick="goScan()">📷 開始掃描條碼</button>
+  </div>
 
   <script>
-    // 假設員工編號由 API 取得
-    function fetchStaffInfo() {
-      // 範例 API，請依實際端點替換
-      fetch('https://mdews.csh.org.tw/WebAPI/StaffInfo/current', {
-        headers: {
-          "Authorization": "Bearer Q29ubmVjdERCIExvY2FsSG9zdA"
-        }
-      })
-        .then(res => res.json())
-        .then(data => {
-          // 假設 data.employeeId
-          document.getElementById('staffInfo').textContent = '員工編號：' + (data.employeeId || '未知');
-        })
-        .catch(() => {
-          document.getElementById('staffInfo').textContent = '員工編號：取得失敗';
-        });
+    function goScan() {
+      const id = document.getElementById('staffId').value.trim();
+      if (!id) {
+        alert("請輸入人員編號");
+        return;
+      }
+      localStorage.setItem('staffId', id);
+      location.href = '0714_0.html';
     }
-    window.onload = fetchStaffInfo;
   </script>
 </body>
 </html>
