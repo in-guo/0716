@@ -1,151 +1,75 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>簽收藥品列表</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>藥品簽收列表</title>
   <style>
-    body {
-      font-family: 'Noto Sans TC', sans-serif;
-      background: #dde9f9;
-      color: #1a3c5e;
-      padding: 40px 20px;
-    }
-    #header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #ccc;
-    }
-    th {
-      background-color: #b2d7f2;
-    }
-    img.med-image {
-      width: 60px;
-      height: auto;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
-    #imgModal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    #imgModal img {
-      max-width: 90%;
-      max-height: 90%;
-      border: 5px solid white;
-      border-radius: 8px;
-    }
+    body { font-family: sans-serif; background: #eef7ff; padding: 2rem; text-align: center; }
+    .card { background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 0 8px rgba(0,0,0,0.2); display: inline-block; width: 90%; max-width: 600px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.5rem; border-bottom: 1px solid #ccc; }
+    th { background-color: #cce5ff; }
+    .fail { color: red; font-weight: bold; }
+    img { width: 40px; height: auto; }
   </style>
 </head>
 <body>
-  <div id="header">
-    <h2>💊 簽收藥品列表</h2>
-    <div>🆔 醫囑號：<strong id="rxId">讀取中...</strong></div>
-    <div>✅ 已勾選藥品數：<span id="totalCount">0</span></div>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>藥品圖片</th>
-        <th>藥品名稱</th>
-        <th>劑量</th>
-        <th>數量</th>
-        <th>已簽收</th>
-      </tr>
-    </thead>
-    <tbody id="medBody">
-      <tr><td colspan="5">🔄 正在載入藥品資料...</td></tr>
-    </tbody>
-  </table>
-
-  <div id="imgModal" onclick="this.style.display='none'">
-    <img id="modalImage" src="" />
+  <div class="card">
+    <h2>💊 藥品簽收列表</h2>
+    <p>🆔 醫囑號：<span id="rx"></span></p>
+    <p>✅ 已勾選藥品數量：<span id="checkedCount">0</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>圖片</th>
+          <th>名稱</th>
+          <th>劑量</th>
+          <th>數量</th>
+          <th>簽收</th>
+        </tr>
+      </thead>
+      <tbody id="medList">
+        <tr><td colspan="5" class="fail">⏳ 載入中...</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <script>
-    const API_URL = "https://mdews.csh.org.tw/WebAPI/MedicationConfirm/v1/Medication/DrugList";
-    const ACCESS_TOKEN = "Q29ubmVjdERCIExvY2FsSG9zdA"; // 實際 token
-    const WARD_NAME = "N13"; // 實際病房
+    const params = new URLSearchParams(location.search);
+    const rx = params.get('rx') || '';
+    const ward = 'N13';
+    document.getElementById('rx').textContent = rx;
 
-    const rx = new URLSearchParams(window.location.search).get('rx');
-    document.getElementById("rxId").textContent = rx || "未提供";
+    const apiUrl = `http://172.16.38.56:3000/proxy/druglist?ward=${ward}&barCode=${rx}`;
 
-    async function fetchDrugList() {
-      if (!rx || !WARD_NAME) {
-        document.getElementById("medBody").innerHTML = `<tr><td colspan="5">❗ 請確認病房與醫囑號</td></tr>`;
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_URL}?ward=${WARD_NAME}&barCode=${rx}`, {
-          headers: {
-            "Authorization": `Bearer ${ACCESS_TOKEN}`,
-            "Content-Type": "application/json"
-          }
-        });
-        const data = await res.json();
-        const list = data?.content?.drugList || [];
-
-        const tbody = document.getElementById("medBody");
-        tbody.innerHTML = "";
-
-        if (!list.length) {
-          tbody.innerHTML = `<tr><td colspan="5">❗ 查無藥品</td></tr>`;
-          return;
-        }
-
-        list.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><img src="${item.imageUrl}" class="med-image" onclick="showModal(this)" /></td>
-            <td>${item.itemName}</td>
-            <td>${item.doseUnit}</td>
-            <td>${item.totQty}</td>
-            <td><input type="checkbox" class="med-check" checked /></td>
+    fetch(apiUrl)
+      .then(res => res.ok ? res.json() : Promise.reject(res))
+      .then(data => {
+        const meds = (data.content && data.content.drugList) || [];
+        const list = document.getElementById('medList');
+        list.innerHTML = '';
+        meds.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><img src="${item.imageUrl || ''}" onerror="this.src='https://via.placeholder.com/40';" /></td>
+            <td>${item.itemName || ''}</td>
+            <td>${item.doseUnit || ''}</td>
+            <td>${item.totQty || ''}</td>
+            <td><input type="checkbox" onchange="updateCount()" /></td>
           `;
-          tbody.appendChild(tr);
+          list.appendChild(row);
         });
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('medList').innerHTML = `<tr><td colspan="5" class="fail">❌ 載入失敗</td></tr>`;
+      });
 
-        document.querySelectorAll(".med-check").forEach(cb => {
-          cb.addEventListener("change", updateTotalCount);
-        });
-
-        updateTotalCount();
-      } catch (e) {
-        document.getElementById("medBody").innerHTML = `<tr><td colspan="5">❌ 載入失敗</td></tr>`;
-        console.error("API 錯誤", e);
-      }
+    function updateCount() {
+      const count = document.querySelectorAll('input[type="checkbox"]:checked').length;
+      document.getElementById('checkedCount').textContent = count;
     }
-
-    function showModal(img) {
-      const modal = document.getElementById("imgModal");
-      document.getElementById("modalImage").src = img.src;
-      modal.style.display = "flex";
-    }
-
-    window.onload = fetchDrugList;
   </script>
 </body>
 </html>
