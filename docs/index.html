@@ -1,33 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>簽收系統首頁</title>
   <style>
     body { font-family: sans-serif; text-align: center; background: #f0f8ff; padding: 3rem; }
     .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: inline-block; width: 90%; max-width: 400px; }
-    input, button { font-size: 1.2rem; padding: 0.5rem; margin-top: 1rem; width: 100%; border-radius: 0.5rem; border: 1px solid #ccc; }
-    button { background: #007bff; color: white; cursor: pointer; border: none; }
+    button { font-size: 1.2rem; padding: 0.5rem; margin-top: 1rem; width: 100%; border-radius: 0.5rem; border: none; background: #007bff; color: white; cursor: pointer; }
     button:hover { background: #0056b3; }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>📋 藥品簽收系統</h2>
-    <input type="text" id="staffId" placeholder="請輸入人員編號">
     <button onclick="goScan()">📷 開始掃描條碼</button>
   </div>
 
   <script>
     function goScan() {
-      const id = document.getElementById('staffId').value.trim();
-      if (!id) {
-        alert("請輸入人員編號");
-        return;
-      }
-      localStorage.setItem('staffId', id);
-      location.href = '0714_0.html';
+      location.href = '0714_0.html?ward=N13';
     }
   </script>
 </body>

@@ -38,7 +38,7 @@
   <script>
     const params = new URLSearchParams(location.search);
     const rx = params.get('rx') || '';
-    const ward = 'N13';
+    const ward = params.get('ward') || 'N13';
     document.getElementById('rx').textContent = rx;
 
     const apiUrl = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${rx}`;

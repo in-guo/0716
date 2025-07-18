@@ -17,14 +17,16 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
     const rxRegex = /^[0-9]{8}$/;
+    const params = new URLSearchParams(window.location.search);
+    const ward = params.get('ward') || 'N13';
     const scanner = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.3333 }; // fullscreen scan box
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.3333 };
 
     function onScanSuccess(decodedText) {
       if (!rxRegex.test(decodedText)) return;
       scanner.stop().then(() => {
         console.log("Scanned:", decodedText);
-        window.location.href = `mock_med_list_v4.html?rx=${decodedText}`;
+        window.location.href = `mock_med_list_v4.html?rx=${decodedText}&ward=${encodeURIComponent(ward)}`;
       });
     }
 
