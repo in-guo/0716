@@ -86,21 +86,17 @@
 
   <script>
     const API_URL = "https://mdews.csh.org.tw/WebAPI/MedicationConfirm/v1/Medication/DrugList";
-    const ACCESS_TOKEN = "Q29ubmVjdERCIExvY2FsSG9zdA"; // TODO: 請替換
-    const WARD_NAME = "N13"; // TODO: 請視情況設定
+    const ACCESS_TOKEN = "Q29ubmVjdERCIExvY2FsSG9zdA"; // 實際 token
+    const WARD_NAME = "N13"; // 實際病房
 
     const rx = new URLSearchParams(window.location.search).get('rx');
     document.getElementById("rxId").textContent = rx || "未提供";
 
-    function updateTotalCount() {
-      const checks = document.querySelectorAll(".med-check");
-      let count = 0;
-      checks.forEach(cb => { if (cb.checked) count++; });
-      document.getElementById("totalCount").textContent = count;
-    }
-
     async function fetchDrugList() {
-      if (!rx) return;
+      if (!rx || !WARD_NAME) {
+        document.getElementById("medBody").innerHTML = `<tr><td colspan="5">❗ 請確認病房與醫囑號</td></tr>`;
+        return;
+      }
 
       try {
         const res = await fetch(`${API_URL}?ward=${WARD_NAME}&barCode=${rx}`, {
