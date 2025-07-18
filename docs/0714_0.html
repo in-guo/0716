@@ -11,44 +11,42 @@
       padding: 0;
       background: black;
       height: 100vh;
+      width: 100vw;
       overflow: hidden;
-    }
-    .app-container {
-      max-width: 400px;
-      margin: 40px auto;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 1.5rem;
-      text-align: center;
     }
     #reader {
-      width: 100%;
-      height: 320px;
-      margin: 0 auto 1rem;
-      background: #eee;
-      border-radius: 12px;
-      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
     }
     #overlay-text {
-      margin-bottom: 10px;
-      color: #333;
-      background: transparent;
-      position: static;
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      z-index: 2;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <h2>📷 掃描醫囑條碼</h2>
-    <div id="reader"></div>
-    <div id="overlay-text">📷 請將條碼置於框內</div>
-  </div>
+  <div id="reader"></div>
+  <div id="overlay-text">📷 請將條碼置於螢幕中央</div>
 
   <script>
     window.onload = function() {
       const reader = new Html5Qrcode("reader");
-      const qrConfig = { fps: 10, qrbox: { width: 300, height: 120 } };
+      // 全螢幕掃描設定
+      const qrConfig = { fps: 10, qrbox: window.innerWidth < 600 ? { width: window.innerWidth * 0.9, height: window.innerHeight * 0.5 } : { width: 400, height: 300 } };
       let scanned = false;
       reader.start(
         { facingMode: "environment" },
