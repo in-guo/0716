@@ -41,7 +41,7 @@
     const ward = 'N13';
     document.getElementById('rx').textContent = rx;
 
-    const apiUrl = `http://172.16.38.56:3000/proxy/druglist?ward=${ward}&barCode=${rx}`;
+    const apiUrl = `http://172.20.10.2:3000/proxy/druglist?ward=${ward}&barCode=${rx}`;
 
     fetch(apiUrl)
       .then(res => res.ok ? res.json() : Promise.reject(res))
