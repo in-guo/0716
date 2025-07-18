@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>掃描醫囑條碼</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     html, body {
       margin: 0;
@@ -57,64 +57,29 @@
   <div id="overlay-text">📷 自動掃描中，請對準醫囑條碼</div>
 
   <script>
-    let scanning = false;
-
-    function startScan() {
-      if (scanning) return;
-      scanning = true;
-
-      Quagga.init({
-        inputStream: {
-          type: "LiveStream",
-          target: document.querySelector("#reader"),
-          constraints: {
-            facingMode: "environment", // ✅ 後鏡頭
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+    window.onload = function() {
+      const reader = new Html5Qrcode("reader");
+      const qrConfig = { fps: 10, qrbox: 250 };
+      let scanned = false;
+      reader.start(
+        { facingMode: "environment" },
+        qrConfig,
+        (decodedText) => {
+          if (!scanned) {
+            scanned = true;
+            document.getElementById("overlay-text").innerText = "✅ 掃描成功：" + decodedText;
+            setTimeout(() => {
+              window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(decodedText)}`;
+            }, 800);
           }
         },
-        locator: {
-          patchSize: "medium",
-          halfSample: true
-        },
-        decoder: {
-          readers: ["code_128_reader"]
-        },
-        locate: true
-      }, function (err) {
-        if (err) {
-          console.error("⚠️ 相機錯誤：", err);
-          document.getElementById("overlay-text").innerText = "⚠️ 相機啟動失敗：" + err;
-          scanning = false;
-          return;
+        (errorMessage) => {
+          // 可忽略錯誤
         }
-        Quagga.start();
-        document.getElementById("overlay-text").innerText = "📷 正在掃描，請對準條碼...";
+      ).catch(err => {
+        document.getElementById("overlay-text").innerText = "⚠️ 相機啟動失敗：" + err;
       });
-
-      Quagga.onDetected(function (data) {
-        const code = data?.codeResult?.code || "";
-        const confidence = data?.codeResult?.confidence || 0;
-
-        console.log("📦 條碼：", code, "信心度：", confidence);
-
-        if (!/^\d{8,10}$/.test(code)) {
-          document.getElementById("overlay-text").innerText = "⚠️ 非醫囑號格式：" + code;
-          return;
-        }
-
-        Quagga.stop();
-        scanning = false;
-        document.getElementById("overlay-text").innerText = "✅ 掃描成功：" + code;
-        setTimeout(() => {
-          window.location.href = `mock_med_list_v4.html?rx=${encodeURIComponent(code)}`;
-        }, 800);
-      });
-    }
-
-    window.addEventListener("load", () => {
-      setTimeout(startScan, 200);
-    });
+    };
   </script>
 </body>
 </html>
