@@ -20,19 +20,21 @@
     const params = new URLSearchParams(window.location.search);
     const ward = params.get('ward') || 'N13';
     const scanner = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.3333 };
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.3333 }; // fullscreen scan box
 
     function onScanSuccess(decodedText) {
       if (!rxRegex.test(decodedText)) return;
       scanner.stop().then(() => {
         console.log("Scanned:", decodedText);
+        // 預設 ward=N13
         window.location.href = `mock_med_list_v4.html?rx=${decodedText}&ward=${encodeURIComponent(ward)}`;
       });
     }
 
     Html5Qrcode.getCameras().then(devices => {
-      const backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
-      scanner.start(backCam.id, config, onScanSuccess);
+      // 強制選擇後鏡頭
+      const frontCam = devices.find(d => d.label.toLowerCase().includes("front")) || devices[0];
+      scanner.start(frontCam.id, config, onScanSuccess);
     }).catch(err => {
       console.error("Camera error", err);
       alert("無法啟用相機：" + err);
