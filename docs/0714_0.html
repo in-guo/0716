@@ -33,8 +33,8 @@
 
     Html5Qrcode.getCameras().then(devices => {
       // 強制選擇後鏡頭
-      const frontCam = devices.find(d => d.label.toLowerCase().includes("front")) || devices[0];
-      scanner.start(frontCam.id, config, onScanSuccess);
+      const backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+      scanner.start(backCam.id, config, onScanSuccess);
     }).catch(err => {
       console.error("Camera error", err);
       alert("無法啟用相機：" + err);
