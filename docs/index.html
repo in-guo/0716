@@ -1,26 +1,129 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>簽收系統首頁</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>藥品簽收系統</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #f0f8ff; padding: 3rem; }
-    .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: inline-block; width: 90%; max-width: 400px; }
-    button { font-size: 1.2rem; padding: 0.5rem; margin-top: 1rem; width: 100%; border-radius: 0.5rem; border: none; background: #007bff; color: white; cursor: pointer; }
-    button:hover { background: #0056b3; }
+    body, html { margin: 0; padding: 0; font-family: sans-serif; background: #eef7ff; color: #333; }
+    .page { display: none; padding: 2rem; text-align: center; }
+    .active { display: block; }
+    button, input, select { font-size: 1rem; padding: 0.5rem; margin-top: 1rem; border-radius: 0.5rem; border: 1px solid #ccc; }
+    #reader { width: 100%; height: 60vh; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.5rem; border-bottom: 1px solid #ccc; }
+    th { background-color: #cce5ff; }
+    img { width: 40px; height: auto; }
+    .fail { color: red; font-weight: bold; }
   </style>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-  <div class="card">
-    <h2>📋 藥品簽收系統</h2>
-    <button onclick="goScan()">📷 開始掃描條碼</button>
-  </div>
 
-  <script>
-    function goScan() {
-      location.href = '0714_0.html?ward=N13';
+<!-- Page 1: 選擇輸入方式 -->
+<div id="page-start" class="page active">
+  <h2>📋 藥品簽收系統</h2>
+  <label><input type="radio" name="mode" value="camera" checked> 📷 相機掃描</label>
+  <label><input type="radio" name="mode" value="manual"> 🧾 PDA 輸入</label><br>
+  <input id="manualRx" placeholder="請掃描或輸入醫囑號（支援 PDA 掃描器）" style="display:none;" onkeydown="if(event.key==='Enter') document.getElementById('btnStart').click()" />
+  <button id="btnStart">開始</button>
+</div>
+
+<!-- Page 2: 掃描畫面 -->
+<div id="page-scan" class="page">
+  <h2>📷 掃描條碼中...</h2>
+  <div id="reader"></div>
+</div>
+
+<!-- Page 3: 藥品清單 -->
+<div id="page-result" class="page">
+  <h2>💊 藥品簽收列表</h2>
+  <p>🆔 醫囑號（來自相機或 PDA）：<span id="rxDisplay"></span></p>
+  <p>✅ 已勾選藥品數量：<span id="checkedCount">0</span></p>
+  <table>
+    <thead>
+      <tr><th>圖片</th><th>名稱</th><th>劑量</th><th>數量</th><th>簽收</th></tr>
+    </thead>
+    <tbody id="medList"><tr><td colspan="5">⏳ 載入中...</td></tr></tbody>
+  </table>
+</div>
+
+<script>
+const rxRegex = /^[0-9]{8}$/;
+const scanner = new Html5Qrcode("reader");
+const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.3333 };
+const ward = 'N13';
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+document.querySelectorAll('input[name="mode"]').forEach(el => {
+  el.addEventListener('change', () => {
+    const val = document.querySelector('input[name="mode"]:checked').value;
+    document.getElementById('manualRx').style.display = val === 'manual' ? 'inline-block' : 'none';
+  });
+});
+
+document.getElementById('btnStart').onclick = () => {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  if (mode === 'camera') {
+    showPage('page-scan');
+    Html5Qrcode.getCameras().then(devices => {
+      let cam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[1] || devices[0];
+      scanner.start(cam.id, config, onScanSuccess);
+    });
+  } else {
+    const rx = document.getElementById('manualRx').value.trim();
+    if (!rxRegex.test(rx)) return alert('請輸入正確的 8 位醫囑號');
+    loadDrugs(rx);
+  }
+};
+
+function onScanSuccess(decodedText) {
+  if (!rxRegex.test(decodedText)) return;
+  scanner.stop().then(() => loadDrugs(decodedText));
+}
+
+function loadDrugs(rx) {
+  showPage('page-result');
+  document.getElementById('rxDisplay').textContent = rx;
+  const apiUrl = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${rx}`;
+  fetch(apiUrl, {
+    headers: {
+      'Authorization': 'Bearer Q29ubmVjdERCIExvY2FsSG9zdA',
+      'Accept': 'application/json'
     }
-  </script>
+  })
+    .then(res => res.ok ? res.json() : Promise.reject(res))
+    .then(data => {
+      const meds = (data.content && data.content.drugList) || [];
+      const list = document.getElementById('medList');
+      list.innerHTML = '';
+      meds.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><img src="${item.imageUrl || ''}" onerror="this.src='https://via.placeholder.com/40';" /></td>
+          <td>${item.itemName || ''}</td>
+          <td>${item.doseUnit || ''}</td>
+          <td>${item.totQty || ''}</td>
+          <td><input type="checkbox" onchange="updateCount()" /></td>
+        `;
+        list.appendChild(row);
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('medList').innerHTML = `<tr><td colspan="5" class="fail">❌ 載入失敗</td></tr>`;
+    });
+}
+
+function updateCount() {
+  const count = document.querySelectorAll('input[type="checkbox"]:checked').length;
+  document.getElementById('checkedCount').textContent = count;
+}
+</script>
 </body>
 </html>
+
